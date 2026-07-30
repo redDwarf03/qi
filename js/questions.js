@@ -108,19 +108,22 @@ const QuestionBank = {
             let possiblePaths = ['v', 'h', 'd1', 'd2'];
             let r1 = [possiblePaths[this.utils.randInt(0,3)]];
             let r2 = [possiblePaths[this.utils.randInt(0,3)]];
-            while(r2[0] === r1[0]) r2 = [possiblePaths[this.utils.randInt(0,3)]];
+            let att1 = 0;
+            while(r2[0] === r1[0] && att1++ < 50) r2 = [possiblePaths[this.utils.randInt(0,3)]];
 
             let row1 = [ r1, r2, [...new Set([...r1, ...r2])] ];
             
             let r3 = [possiblePaths[this.utils.randInt(0,3)]];
             let r4 = [possiblePaths[this.utils.randInt(0,3)]];
-            while(r4[0] === r3[0]) r4 = [possiblePaths[this.utils.randInt(0,3)]];
+            let att2 = 0;
+            while(r4[0] === r3[0] && att2++ < 50) r4 = [possiblePaths[this.utils.randInt(0,3)]];
             
             let row2 = [ r3, r4, [...new Set([...r3, ...r4])] ];
 
             let r5 = [possiblePaths[this.utils.randInt(0,3)]];
             let r6 = [possiblePaths[this.utils.randInt(0,3)]];
-            while(r6[0] === r5[0]) r6 = [possiblePaths[this.utils.randInt(0,3)]];
+            let att3 = 0;
+            while(r6[0] === r5[0] && att3++ < 50) r6 = [possiblePaths[this.utils.randInt(0,3)]];
             
             let row3 = [ r5, r6 ]; // Missing 3rd
             let correctArr = [...new Set([...r5, ...r6])];
@@ -249,14 +252,33 @@ const QuestionBank = {
         let options = [{ text: correctStr, isCorrect: true }];
         
         // Faux choix
-        while(options.length < 4) {
+        let attempts = 0;
+        while(options.length < 4 && attempts < 100) {
+            attempts++;
             let fakeArr = [...correctArr];
-            // Swap two adjacent items
-            let swapIdx = this.utils.randInt(0, fakeArr.length-2);
-            let temp = fakeArr[swapIdx];
-            fakeArr[swapIdx] = fakeArr[swapIdx+1];
-            fakeArr[swapIdx+1] = temp;
+            if (Math.random() < 0.5 && fakeArr.length >= 2) {
+                // Swap two adjacent items
+                let swapIdx = this.utils.randInt(0, fakeArr.length - 2);
+                let temp = fakeArr[swapIdx];
+                fakeArr[swapIdx] = fakeArr[swapIdx + 1];
+                fakeArr[swapIdx + 1] = temp;
+            } else {
+                // Alter one digit
+                let alterIdx = this.utils.randInt(0, fakeArr.length - 1);
+                fakeArr[alterIdx] = this.utils.randInt(1, 9);
+            }
             
+            let fakeStr = fakeArr.join(' - ');
+            if (!options.find(o => o.text === fakeStr)) {
+                options.push({ text: fakeStr, isCorrect: false });
+            }
+        }
+
+        // Fallback ultime si 4 options n'ont pas encore été trouvées
+        let fallbackAttempts = 0;
+        while(options.length < 4 && fallbackAttempts < 50) {
+            fallbackAttempts++;
+            let fakeArr = Array.from({ length }, () => this.utils.randInt(1, 9));
             let fakeStr = fakeArr.join(' - ');
             if (!options.find(o => o.text === fakeStr)) {
                 options.push({ text: fakeStr, isCorrect: false });

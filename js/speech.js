@@ -35,6 +35,12 @@ const SpeechEngine = {
             return this._readyPromise;
         }
 
+        /**
+         * Renvoie true uniquement si une voix FRANÇAISE a été retenue.
+         * Chrome peuple la liste par vagues (voix locales d'abord, voix réseau
+         * ensuite) : se contenter d'une liste non vide ferait abandonner à la
+         * première vague et manquerait une voix française arrivant après.
+         */
         const pickVoice = () => {
             const voices = window.speechSynthesis.getVoices() || [];
             if (!voices.length) return false;
@@ -44,7 +50,7 @@ const SpeechEngine = {
                 voices.find(v => v.lang && v.lang.toLowerCase().startsWith('fr')) ||
                 null;
             this.available = !!this.voice;
-            return true;
+            return this.available;
         };
 
         this._readyPromise = new Promise(resolve => {
@@ -61,7 +67,10 @@ const SpeechEngine = {
             };
             window.speechSynthesis.addEventListener('voiceschanged', onVoicesChanged);
 
-            // Garde-fou : certains navigateurs n'émettent jamais 'voiceschanged'
+            // Garde-fou, et seule sortie possible lorsque l'appareil n'a
+            // aucune voix française : certains navigateurs n'émettent jamais
+            // 'voiceschanged'. Coût assumé de 1,5 s sur ces appareils, contre
+            // le risque de conclure « pas de voix FR » avant qu'elle arrive.
             setTimeout(() => {
                 if (settled) return;
                 settled = true;

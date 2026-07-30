@@ -53,10 +53,10 @@ const App = {
             this.startQuiz();
         });
 
-        // Bouton Mute Audio
-        document.getElementById('btn-audio-toggle')?.addEventListener('click', (e) => {
-            const muted = SoundEngine.toggleMute();
-            e.currentTarget.innerHTML = muted ? '🔇' : '🔊';
+        // Navigation Accueil (Menu Textuel)
+        document.getElementById('btn-home-nav')?.addEventListener('click', () => {
+            SoundEngine.playClick();
+            this.showScreen('welcome-screen');
         });
 
         // Bouton Imprimer / PDF
@@ -70,6 +70,16 @@ const App = {
             SoundEngine.playClick();
             this.resetQuiz();
             this.showScreen('welcome-screen');
+        });
+
+        // Navigation Références
+        document.getElementById('btn-references')?.addEventListener('click', () => {
+            SoundEngine.playClick();
+            this.showScreen('references-screen');
+        });
+        document.getElementById('btn-close-references')?.addEventListener('click', () => {
+            SoundEngine.playClick();
+            this.showScreen('welcome-screen'); // Reviens à l'accueil par défaut
         });
     },
 
@@ -136,7 +146,7 @@ const App = {
                 visualContainer.innerHTML = `
                     <div class="digit-sequence-box">
                         <span class="digit-label">Séquence à retenir :</span>
-                        <div class="digits-row">${item.sequence.map(n => `<span class="digit-card">${n}</span>`).join('')}</div>
+                        <div class="digits-row" id="memory-sequence-digits">${item.sequence.map(n => `<span class="digit-card">${n}</span>`).join('')}</div>
                     </div>
                 `;
                 visualContainer.style.display = 'flex';
@@ -148,6 +158,26 @@ const App = {
         // Grille des options de réponse
         const optionsGrid = document.getElementById('quiz-options-grid');
         optionsGrid.innerHTML = '';
+        optionsGrid.style.display = ''; // Réinitialisation de l'affichage
+
+        if (this.memoryTimeout) {
+            clearTimeout(this.memoryTimeout);
+        }
+
+        if (item.sequence) {
+            optionsGrid.style.display = 'none'; // Cacher les options pendant la mémorisation
+            // Temps de mémorisation : 1.5 seconde par chiffre
+            const memoTime = item.sequence.length * 1500;
+            
+            this.memoryTimeout = setTimeout(() => {
+                const digitsRow = document.getElementById('memory-sequence-digits');
+                if (digitsRow) {
+                    digitsRow.innerHTML = '<span class="digit-label" style="font-size:1.2rem; color:var(--text-secondary); margin-top: 10px;">Séquence masquée. À vous !</span>';
+                }
+                optionsGrid.style.display = ''; // Afficher les options
+            }, memoTime);
+        }
+
 
         item.options.forEach((opt, idx) => {
             const btn = document.createElement('button');

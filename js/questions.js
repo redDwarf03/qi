@@ -170,20 +170,41 @@ const QuestionBank = {
             accColor = '#f59e0b';
         }
 
+        const shapeDefs = [
+            { // L-shape
+                base: { pts: '20,20 80,20 80,60 120,60 120,100 20,100', cx: 50, cy: 50 },
+                opt: { pts: '10,10 50,10 50,30 70,30 70,60 10,60', cx: 30, cy: 30, rotX: 35, rotY: 35, flipX: -70 }
+            },
+            { // Z-shape
+                base: { pts: '20,20 90,20 90,60 130,60 130,100 60,100 60,60 20,60', cx: 40, cy: 40 },
+                opt: { pts: '10,10 55,10 55,35 80,35 80,60 40,60 40,35 10,35', cx: 25, cy: 22, rotX: 45, rotY: 35, flipX: -90 }
+            },
+            { // U-shape
+                base: { pts: '20,20 50,20 50,80 90,80 90,20 120,20 120,110 20,110', cx: 70, cy: 95 },
+                opt: { pts: '12,12 30,12 30,48 54,48 54,12 72,12 72,66 12,66', cx: 42, cy: 57, rotX: 42, rotY: 39, flipX: -84 }
+            },
+            { // Gamma
+                base: { pts: '20,20 100,20 100,60 60,60 60,120 20,120', cx: 40, cy: 90 },
+                opt: { pts: '12,12 60,12 60,36 36,36 36,72 12,72', cx: 24, cy: 54, rotX: 36, rotY: 42, flipX: -72 }
+            }
+        ];
+        
+        let shape = shapeDefs[this.utils.randInt(0, shapeDefs.length - 1)];
+
         const renderMatrix = () => {
             const size = 200;
             return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
                 <rect width="${size}" height="${size}" rx="12" fill="#ffffff" stroke="${color}" stroke-width="2"/>
                 <g transform="translate(40, 40)">
-                    ${S.polygon('20,20 80,20 80,60 120,60 120,100 20,100', color, 'rgba(0,0,0,0.05)', 3)}
-                    ${S.circle(50, 50, 8, accColor, accColor)}
+                    ${S.polygon(shape.base.pts, color, 'rgba(0,0,0,0.05)', 3)}
+                    ${S.circle(shape.base.cx, shape.base.cy, 8, accColor, accColor)}
                 </g>
             </svg>`;
         };
 
-        const makeOpt = (rot, scaleX) => (s) => `<g transform="translate(10,10) scale(${scaleX}, 1) ${scaleX === -1 ? 'translate(-70,0)' : ''} rotate(${rot}, 35, 35)">
-            ${S.polygon('10,10 50,10 50,30 70,30 70,60 10,60', color, 'none', 2)}
-            ${S.circle(30, 30, 5, accColor, accColor)}
+        const makeOpt = (rot, scaleX) => (s) => `<g transform="translate(10,10) scale(${scaleX}, 1) ${scaleX === -1 ? `translate(${shape.opt.flipX},0)` : ''} rotate(${rot}, ${shape.opt.rotX}, ${shape.opt.rotY})">
+            ${S.polygon(shape.opt.pts, color, 'none', 2)}
+            ${S.circle(shape.opt.cx, shape.opt.cy, 5, accColor, accColor)}
         </g>`;
 
         let correctRender = makeOpt(targetAngle, 1);

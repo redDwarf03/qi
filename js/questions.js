@@ -273,13 +273,27 @@ const QuestionBank = {
     // VALIDATION & DÉDOUBLONNAGE
     // =========================================================================
 
-    /** Empreinte visuelle d'une option : on rend réellement le SVG pour comparer. */
+    /**
+     * Empreinte visuelle d'une option : on rend réellement le SVG pour comparer.
+     * Renvoie null si l'option est irrécupérable (rendu qui jette, ou rendu vide).
+     * Surtout pas une chaîne sentinelle du type 'svg:err' : une seule option
+     * cassée partagerait alors une signature valide et unique, donc l'item
+     * passerait la validation avec une case impossible à choisir.
+     */
     optionSignature(opt) {
+        if (!opt) return null;
         if (typeof opt.render === 'function') {
-            try { return 'svg:' + this.utils.hash(opt.render(90)); }
-            catch (e) { return 'svg:err'; }
+            try {
+                const svg = opt.render(90);
+                if (!svg) return null;
+                return 'svg:' + this.utils.hash(svg);
+            } catch (e) {
+                console.warn('Option au rendu invalide, item rejeté :', e);
+                return null;
+            }
         }
-        return 'txt:' + this.normalizeAnswer(opt.text);
+        const text = this.normalizeAnswer(opt.text);
+        return text ? 'txt:' + text : null;
     },
 
     /** Empreinte d'un item : énoncé + stimulus + bonne réponse. */
@@ -307,12 +321,23 @@ const QuestionBank = {
                 && item.acceptedAnswers.every(a => typeof a === 'string' && a.length > 0);
         }
 
+        // Un stimulus qui jette produirait une question sans énoncé visuel :
+        // même logique que pour les options, l'item est rejeté.
+        if (typeof item.renderMatrix === 'function') {
+            try {
+                if (!item.renderMatrix()) return false;
+            } catch (e) {
+                console.warn('Stimulus au rendu invalide, item rejeté :', e);
+                return false;
+            }
+        }
+
         const opts = item.options;
         if (!Array.isArray(opts) || opts.length < 3) return false;
         if (opts.filter(o => o.isCorrect).length !== 1) return false;
 
         const sigs = opts.map(o => this.optionSignature(o));
-        if (sigs.some(s => !s || s === 'txt:')) return false;
+        if (sigs.some(s => !s)) return false;
         return new Set(sigs).size === sigs.length;
     },
 

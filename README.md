@@ -17,7 +17,7 @@ L'application est entièrement jouable dans le navigateur, sans nécessiter de s
   - ⚡ **Mémoire de Travail ($Gwm$)** : Maintien et traitement d'informations à court terme.
   - ⏱️ **Vitesse de Traitement ($Gs$)** : Rapidité et précision de l'attention visuelle.
   - 🧠 **Raisonnement Verbal & Quantitatif ($Gc/Gq$)** : Compréhension conceptuelle et logique mathématique.
-- **16 types de tâches distincts**, distribués en cycle : sur une batterie donnée, un même type de question ne peut pas revenir plus de 2 à 3 fois.
+- **17 types de tâches distincts** (4 Gf + 3 Gvis + 4 Gwm + 2 Gs + 4 GcQ), distribués en cycle : sur une batterie donnée, un même type de question ne peut pas revenir plus de 2 à 3 fois.
 - **Empans de mémoire en conditions cliniques** : les chiffres défilent **un par un** puis disparaissent, et la réponse se saisit **au clavier** (pas de QCM). C'est ce qui rend l'ordre inverse réellement coûteux — avec la séquence affichée en entier, il suffisait de la lire de droite à gauche.
 - **Problèmes de logique énoncés à l'oral** (Web Speech API) : l'énoncé est dit **une seule fois** et jamais affiché, et contient des informations parasites destinées à brouiller le raisonnement. Repli automatique sur l'affichage écrit si aucune voix française n'est disponible.
 - **Courbe de Gauss Interactive** : Calcule le Rang Percentile exact et affiche la distribution normale ($\mu = 100, \sigma = 15$).

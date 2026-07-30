@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QI Metrix 2026 — Évaluation & Calcul du QI (WAIS-V & CHC Norms)</title>
+    <meta name="description" content="Application web standalone de test et calcul du Quotient Intellectuel (QI) selon le référentiel 2026 basé sur la WAIS-V et le modèle CHC de Cattell-Horn-Carroll.">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Barre de Navigation -->
+    <header class="navbar">
+        <div class="nav-brand">
+            <span class="brand-logo">🧠</span>
+            <span class="brand-name">QI METRIX</span>
+            <span class="brand-tag">Normes 2026</span>
+        </div>
+        <div class="nav-actions">
+            <button id="btn-audio-toggle" class="btn-icon" title="Activer / Désactiver les effets sonores">🔊</button>
+        </div>
+    </header>
+
+    <!-- Conteneur Principal -->
+    <main class="main-container">
+
+        <!-- ÉCRAN 1 : ACCUEIL -->
+        <section id="welcome-screen" class="screen active">
+            <div class="welcome-hero">
+                <span class="hero-badge">🔬 Référentiel Clinique WAIS-V & Modèle CHC</span>
+                <h1>Test & Calcul du <span class="text-gradient">Quotient Intellectuel</span></h1>
+                <p class="hero-subtitle">
+                    Évaluez votre fonctionnement intellectuel sur 5 domaines clés de votre cerveau. Obtenez un vrai score de QI (moyenne à 100) et découvrez comment vous vous situez par rapport au reste de la population !
+                </p>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🧩</div>
+                    <h3>5 Domaines CHC</h3>
+                    <p>Mesure de votre logique (Raisonnement Fluide), imagination 3D (Visuo-Spatial), mémoire, vitesse et réflexion.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Courbe de Gauss</h3>
+                    <p>Découvrez votre "Rang Percentile" exact : par exemple, si vous êtes plus rapide que 85% des gens de votre âge.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📑</div>
+                    <h3>Rapport Clinique</h3>
+                    <p>Un bilan sur mesure qui analyse vos super-pouvoirs et vos faiblesses, exportable en PDF.</p>
+                </div>
+            </div>
+
+            <div class="action-bar">
+                <button id="btn-start-test" class="btn-primary">Commencer l'Étalonnage & Test</button>
+            </div>
+        </section>
+
+        <!-- ÉCRAN 2 : ÉTALONNAGE & MODE DE PASSATION -->
+        <section id="calibration-screen" class="screen">
+            <div class="card-box">
+                <h2>Paramètres d'Étalonnage Psychométrique</h2>
+                <p>Ajustement des scores z selon la tranche d'âge et choix de la batterie d'évaluation.</p>
+
+                <div class="form-group">
+                    <label for="user-age">Votre Âge (important pour comparer vos résultats à ceux des gens de votre âge) :</label>
+                    <input type="number" id="user-age" class="input-styled" min="16" max="90" value="25">
+                </div>
+
+                <div class="form-group">
+                    <label>Sélectionnez la durée de votre évaluation :</label>
+                    <div class="mode-selector-grid">
+                        <div class="mode-card selected" data-mode="express">
+                            <div class="mode-header">
+                                <span class="mode-title">⚡ Test Express</span>
+                                <span class="mode-time">~10 min</span>
+                            </div>
+                            <p style="font-size:0.88rem; color:var(--text-secondary);">8 questions rapides pour tester la base de votre logique, mémoire et repérage dans l'espace.</p>
+                        </div>
+                        <div class="mode-card" data-mode="full">
+                            <div class="mode-header">
+                                <span class="mode-title">🔬 Batterie Complète</span>
+                                <span class="mode-time">~25 min</span>
+                            </div>
+                            <p style="font-size:0.88rem; color:var(--text-secondary);">15 questions complètes pour un bilan profond de votre cerveau avec un grand rapport détaillé.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-bar">
+                    <button id="btn-launch-quiz" class="btn-primary">Lancer le Test</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ÉCRAN 3 : INTERFACE DE PASSATION DU QUIZ -->
+        <section id="quiz-screen" class="screen">
+            <div class="quiz-header">
+                <div class="progress-container">
+                    <div id="quiz-progress-text" class="progress-text">Question 1 sur 10</div>
+                    <div class="progress-bar-bg">
+                        <div id="quiz-progress-fill" class="progress-bar-fill"></div>
+                    </div>
+                </div>
+                <div id="quiz-domain-badge" class="domain-badge">🧩 Raisonnement Fluide</div>
+                <div class="timer-box">
+                    <span>⏱️</span>
+                    <span id="quiz-timer-display" class="timer-display">45s</span>
+                </div>
+            </div>
+
+            <div class="quiz-card">
+                <h2 id="quiz-question-title" class="question-title">Chargement de l'item...</h2>
+
+                <div id="quiz-visual-container" class="visual-container">
+                    <!-- Rendu dynamique vectoriel SVG ou matrice -->
+                </div>
+
+                <div id="quiz-options-grid" class="options-grid">
+                    <!-- Boutons de réponse générés en JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ÉCRAN 4 : ANIMATION DE CALCUL PSYCHOMÉTRIQUE -->
+        <section id="computing-screen" class="screen">
+            <div class="card-box computing-box">
+                <div class="loader-spinner"></div>
+                <h2>Calcul Psychométrique en Cours</h2>
+                <p style="color:var(--text-secondary);">Conversion des scores bruts en z-scores normés WAIS-V 2026...</p>
+            </div>
+        </section>
+
+        <!-- ÉCRAN 5 : DASHBOARD DES RÉSULTATS -->
+        <section id="results-screen" class="screen">
+
+            <!-- Hero Score QIT -->
+            <div class="results-hero">
+                <div class="hero-title-small">Quotient Intellectuel Total (QIT / FSIQ)</div>
+                <div id="res-fsiq-score" class="fsiq-display">115</div>
+                <div id="res-classification" class="classification-badge level-superior">🌟 Supérieur</div>
+                
+                <div class="fsiq-stats-row">
+                    <div class="stat-item">
+                        <span class="stat-label">Rang Percentile</span>
+                        <span id="res-percentile" class="stat-value">84.1e</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Intervalle de Confiance (95%)</span>
+                        <span id="res-ci95" class="stat-value">[109 - 121]</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Étalonnage</span>
+                        <span class="stat-value">WAIS-V 2026</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Graphique Courbe de Gauss -->
+            <div class="gauss-card">
+                <h3 class="section-title">📊 Positionnement sur la Courbe de Gauss</h3>
+                <div id="gauss-curve-container">
+                    <!-- SVG de la Courbe de Gauss rendu en JS -->
+                </div>
+            </div>
+
+            <!-- Grille des 5 Domaines CHC -->
+            <h3 class="section-title">🧩 Profil d'Efficience par Domaine CHC</h3>
+            <div id="chc-indices-grid" class="chc-grid">
+                <!-- Cartes des domaines générées en JS -->
+            </div>
+
+            <!-- Synthèse Neuropsychologique & Homogénéité -->
+            <div class="neuro-card">
+                <h3 class="section-title">🧠 Interprétation Neuropsychologique & Homogénéité</h3>
+                <div id="res-heterogeneity-note" class="heterogeneity-note">
+                    Votre profil est en cours d'analyse...
+                </div>
+                <div id="res-neuro-paragraphs">
+                    <!-- Paragraphes générés en JS -->
+                </div>
+            </div>
+
+            <!-- Pied de page du rapport & actions -->
+            <div class="results-footer">
+                <div>
+                    <span style="font-size:0.85rem; color:var(--text-muted);">Passation réalisée le <strong id="res-date">-</strong> en <strong id="res-duration">-</strong></span>
+                </div>
+                <div style="display:flex; gap:1rem;">
+                    <button id="btn-print-report" class="btn-secondary">🖨️ Imprimer / Export PDF</button>
+                    <button id="btn-restart" class="btn-primary">Nouveau Test</button>
+                </div>
+            </div>
+
+            <!-- Historique des tests -->
+            <div class="history-section">
+                <h3 class="section-title">📜 Historique des Évaluations Enregistrées</h3>
+                <div id="history-list" class="history-list">
+                    <!-- Liste tirée du LocalStorage -->
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Scripts Javascript -->
+    <script src="js/psychometrics.js"></script>
+    <script src="js/audio.js"></script>
+    <script src="js/questions.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

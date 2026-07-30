@@ -6,11 +6,11 @@
 const PsychometricsEngine = {
     // 5 Domaines CHC principaux (expliqués simplement)
     DOMAINS: {
-        Gf: { id: 'Gf', name: 'Raisonnement Fluide', acronym: 'IRF', color: '#00f2fe', icon: '🧩', desc: 'Votre capacité de déduction. C’est ce qui vous permet de résoudre des problèmes nouveaux, de trouver la logique d’une suite sans avoir besoin de l’apprendre à l’école.' },
-        Gvis: { id: 'Gvis', name: 'Traitements Visuo-Spatiaux', acronym: 'IVS', color: '#7f00ff', icon: '📐', desc: 'Votre imagination spatiale. C’est la capacité à tourner mentalement des objets 3D dans votre tête, utile pour s’orienter, le design ou l’architecture.' },
-        Gwm: { id: 'Gwm', name: 'Mémoire de Travail', acronym: 'IMT', color: '#f72585', icon: '⚡', desc: 'Votre "mémoire vive" mentale. Elle sert à retenir des infos sur le moment (comme un code reçu par SMS) et à jongler avec pour faire un calcul de tête.' },
-        Gs: { id: 'Gs', name: 'Vitesse de Traitement', acronym: 'IVT', color: '#4cc9f0', icon: '⏱️', desc: 'La réactivité de votre cerveau. C’est votre vitesse pour analyser des images ou symboles simples rapidement et sans vous tromper.' },
-        GcQ: { id: 'GcQ', name: 'Raisonnement Verbal & Quantitatif', acronym: 'ICV', color: '#ffb703', icon: '🧠', desc: 'Votre base de connaissances. C’est la capacité à comprendre des concepts compliqués, à manier les mots (vocabulaire) et à utiliser la logique des chiffres.' }
+        Gf: { id: 'Gf', name: 'Raisonnement Fluide', acronym: 'IRF', color: '#0ea5e9', icon: '🧩', desc: 'Votre capacité de déduction. C’est ce qui vous permet de résoudre des problèmes nouveaux, de trouver la logique d’une suite sans avoir besoin de l’apprendre à l’école.' },
+        Gvis: { id: 'Gvis', name: 'Traitements Visuo-Spatiaux', acronym: 'IVS', color: '#6366f1', icon: '📐', desc: 'Votre imagination spatiale. C’est la capacité à tourner mentalement des objets 3D dans votre tête, utile pour s’orienter, le design ou l’architecture.' },
+        Gwm: { id: 'Gwm', name: 'Mémoire de Travail', acronym: 'IMT', color: '#ec4899', icon: '⚡', desc: 'Votre "mémoire vive" mentale. Elle sert à retenir des infos sur le moment (comme un code reçu par SMS) et à jongler avec pour faire un calcul de tête.' },
+        Gs: { id: 'Gs', name: 'Vitesse de Traitement', acronym: 'IVT', color: '#8b5cf6', icon: '⏱️', desc: 'La réactivité de votre cerveau. C’est votre vitesse pour analyser des images ou symboles simples rapidement et sans vous tromper.' },
+        GcQ: { id: 'GcQ', name: 'Raisonnement Verbal & Quantitatif', acronym: 'ICV', color: '#f59e0b', icon: '🧠', desc: 'Votre base de connaissances. C’est la capacité à comprendre des concepts compliqués, à manier les mots (vocabulaire) et à utiliser la logique des chiffres.' }
     },
 
     /**
@@ -63,8 +63,9 @@ const PsychometricsEngine = {
      * @param {Object} maxScores Map du score max possible par domaine
      * @param {Number} age Âge du candidat
      * @param {Number} totalTimeSeconds Temps total passé en secondes
+     * @param {Object} avgRT Temps de réaction moyen par domaine
      */
-    computeFullReport(rawScores, maxScores, age = 25, totalTimeSeconds = 600) {
+    computeFullReport(rawScores, maxScores, age = 25, totalTimeSeconds = 600, avgRT = {}) {
         const ageMult = this.getAgeMultiplier(age);
         const indices = {};
         let weightedSumZ = 0;
@@ -73,8 +74,22 @@ const PsychometricsEngine = {
         // Calcul des scores par domaine (Standard Scale: Score de sous-test M=10, SD=3 -> Indice M=100, SD=15)
         for (const [domainId, raw] of Object.entries(rawScores)) {
             const max = maxScores[domainId] || 1;
-            const ratio = Math.min(1.0, Math.max(0, raw / max));
+            let ratio = Math.min(1.0, Math.max(0, raw / max));
             
+            // Speed penalty for Gs (Vitesse de traitement)
+            if (domainId === 'Gs' && avgRT['Gs']) {
+                const rt = avgRT['Gs'];
+                // Target average reaction time for speed task is around 2 seconds
+                // If they take longer than 3.5s on average, penalize heavily
+                if (rt > 3.5) {
+                    ratio = ratio * 0.7; // 30% penalty
+                } else if (rt < 1.5 && ratio > 0.8) {
+                    ratio = Math.min(1.0, ratio * 1.1); // 10% bonus for ultra speed & accuracy
+                } else if (rt > 2.5) {
+                    ratio = ratio * 0.9; // 10% penalty
+                }
+            }
+
             // Correction psychométrique continue avec courbe d'étalonnage WAIS-5
             let z = (ratio - 0.55) / 0.22; // 55% de réussite correspond à la moyenne z=0
             z = z * ageMult;
@@ -209,3 +224,5 @@ const PsychometricsEngine = {
         return `${mins} min ${secs < 10 ? '0' : ''}${secs} s`;
     }
 };
+
+

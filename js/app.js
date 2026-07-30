@@ -84,12 +84,10 @@ const App = {
     },
 
     startQuiz() {
-        let allItems = QuestionBank.getItems();
         if (this.state.mode === 'express') {
-            // Sélection équilibrée de 8 items pour la batterie rapide
-            this.state.items = allItems.slice(0, 8);
+            this.state.items = QuestionBank.generateTestBattery(30);
         } else {
-            this.state.items = allItems;
+            this.state.items = QuestionBank.generateTestBattery(75);
         }
 
         this.state.currentIndex = 0;
@@ -116,7 +114,7 @@ const App = {
         document.getElementById('quiz-progress-text').innerText = `Question ${currentNum} sur ${total}`;
 
         // Badge du domaine CHC
-        const domainInfo = PsychometricsEngine.DOMAINS[item.domain] || { name: item.domain, color: '#00f2fe', icon: '🧠' };
+        const domainInfo = PsychometricsEngine.DOMAINS[item.domain] || { name: item.domain, color: '#0ea5e9', icon: '🧠' };
         const badgeEl = document.getElementById('quiz-domain-badge');
         if (badgeEl) {
             badgeEl.innerHTML = `${domainInfo.icon} ${domainInfo.name}`;
@@ -246,6 +244,7 @@ const App = {
         // Agrégation des scores bruts et max par domaine CHC
         const rawScores = { Gf: 0, Gvis: 0, Gwm: 0, Gs: 0, GcQ: 0 };
         const maxScores = { Gf: 0, Gvis: 0, Gwm: 0, Gs: 0, GcQ: 0 };
+        const reactionTimes = { Gf: [], Gvis: [], Gwm: [], Gs: [], GcQ: [] };
 
         this.state.items.forEach(item => {
             const d = item.domain;
@@ -254,13 +253,27 @@ const App = {
             if (ans && ans.isCorrect) {
                 rawScores[d] = (rawScores[d] || 0) + 1;
             }
+            if (ans && ans.timeSpentSeconds) {
+                reactionTimes[d].push(ans.timeSpentSeconds);
+            }
         });
+
+        // Compute average RT per domain
+        const avgRT = {};
+        for (const [d, times] of Object.entries(reactionTimes)) {
+            if (times.length > 0) {
+                avgRT[d] = times.reduce((a, b) => a + b, 0) / times.length;
+            } else {
+                avgRT[d] = 999;
+            }
+        }
 
         const report = PsychometricsEngine.computeFullReport(
             rawScores,
             maxScores,
             this.state.age,
-            this.state.totalTimeSpent
+            this.state.totalTimeSpent,
+            avgRT
         );
 
         this.state.results = report;
@@ -272,7 +285,8 @@ const App = {
     renderResultsDashboard(report) {
         // Score QIT Hero
         document.getElementById('res-fsiq-score').innerText = report.fsiq;
-        document.getElementById('res-percentile').innerText = `Top ${100 - report.percentile}% (Percentile ${report.percentile}e)`;
+        const topPercent = Math.round((100 - report.percentile) * 10) / 10;
+        document.getElementById('res-percentile').innerText = `Top ${topPercent}% (Percentile ${report.percentile}e)`;
         document.getElementById('res-ci95').innerText = `[${report.ci95[0]} - ${report.ci95[1]}]`;
 
         // Classification clinique
@@ -346,9 +360,9 @@ const App = {
         let svg = `<svg width="100%" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
             <defs>
                 <linearGradient id="gaussGrad" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stop-color="#7f00ff" stop-opacity="0.2"/>
-                    <stop offset="50%" stop-color="#00f2fe" stop-opacity="0.4"/>
-                    <stop offset="100%" stop-color="#f72585" stop-opacity="0.6"/>
+                    <stop offset="0%" stop-color="#6366f1" stop-opacity="0.2"/>
+                    <stop offset="50%" stop-color="#0ea5e9" stop-opacity="0.4"/>
+                    <stop offset="100%" stop-color="#ec4899" stop-opacity="0.6"/>
                 </linearGradient>
             </defs>
 
@@ -356,21 +370,21 @@ const App = {
             <polygon points="${margin.left},${margin.top + graphH} ${fillAreaPoints.join(' ')} ${userX},${margin.top + graphH}" fill="url(#gaussGrad)"/>
 
             <!-- Ligne de la Courbe -->
-            <polyline points="${points.join(' ')}" fill="none" stroke="#00f2fe" stroke-width="3"/>
+            <polyline points="${points.join(' ')}" fill="none" stroke="#0ea5e9" stroke-width="3"/>
 
             <!-- Lignes de Dév. Standard (-2SD, -1SD, Mean, +1SD, +2SD) -->
             ${[70, 85, 100, 115, 130].map(sdVal => {
                 const sx = margin.left + ((sdVal - minIQ) / (maxIQ - minIQ)) * graphW;
                 return `
-                    <line x1="${sx}" y1="${margin.top}" x2="${sx}" y2="${margin.top + graphH}" stroke="rgba(255,255,255,0.15)" stroke-dasharray="3,3"/>
-                    <text x="${sx}" y="${margin.top + graphH + 20}" font-size="11" fill="#8b95c9" text-anchor="middle">${sdVal}</text>
+                    <line x1="${sx}" y1="${margin.top}" x2="${sx}" y2="${margin.top + graphH}" stroke="#cbd5e1" stroke-dasharray="3,3"/>
+                    <text x="${sx}" y="${margin.top + graphH + 20}" font-size="11" fill="#6366f1" text-anchor="middle">${sdVal}</text>
                 `;
             }).join('')}
 
             <!-- Marqueur du Candidat -->
-            <line x1="${userX}" y1="${margin.top - 10}" x2="${userX}" y2="${margin.top + graphH}" stroke="#f72585" stroke-width="2.5"/>
-            <circle cx="${userX}" cy="${userY}" r="7" fill="#f72585" stroke="#ffffff" stroke-width="2"/>
-            <rect x="${Math.max(10, Math.min(w - 110, userX - 50))}" y="${margin.top - 25}" width="100" height="22" rx="4" fill="#f72585"/>
+            <line x1="${userX}" y1="${margin.top - 10}" x2="${userX}" y2="${margin.top + graphH}" stroke="#ec4899" stroke-width="2.5"/>
+            <circle cx="${userX}" cy="${userY}" r="7" fill="#ec4899" stroke="#ffffff" stroke-width="2"/>
+            <rect x="${Math.max(10, Math.min(w - 110, userX - 50))}" y="${margin.top - 25}" width="100" height="22" rx="4" fill="#ec4899"/>
             <text x="${Math.max(10, Math.min(w - 110, userX - 50)) + 50}" y="${margin.top - 10}" font-size="12" font-weight="bold" fill="#ffffff" text-anchor="middle">QI ${iq} (${percentile}e %)</text>
         </svg>`;
 
@@ -450,3 +464,5 @@ const App = {
         clearInterval(this.state.itemTimer);
     }
 };
+
+

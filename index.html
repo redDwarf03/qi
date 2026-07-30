@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QI Metrix 2026 — Évaluation & Calcul du QI (WAIS-V & CHC Norms)</title>
-    <meta name="description" content="Application web standalone de test et calcul du Quotient Intellectuel (QI) selon le référentiel 2026 basé sur la WAIS-V et le modèle CHC de Cattell-Horn-Carroll.">
+    <title>QI Metrix 2026 — Test cognitif inspiré de la WAIS-5 et du modèle CHC</title>
+    <meta name="description" content="Test cognitif en ligne, gratuit et sans inscription, dont la structure en 5 domaines s'inspire de la WAIS-5 (2024) et du modèle CHC. Normes synthétiques : ce n'est pas un bilan psychométrique étalonné.">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -15,11 +15,12 @@
         <div class="nav-brand">
             <span class="brand-logo">🧠</span>
             <span class="brand-name">QI METRIX</span>
-            <span class="brand-tag">Normes 2026</span>
+            <span class="brand-tag">Structure WAIS-5</span>
         </div>
         <div class="nav-actions">
-            <button id="btn-home-nav" class="nav-link" style="background:none; border:none; color:var(--text); font-size:1rem; cursor:pointer; font-weight:500; margin-right:1rem; transition: color 0.3s;">Accueil</button>
-            <button id="btn-references" class="nav-link" style="background:none; border:none; color:var(--text); font-size:1rem; cursor:pointer; font-weight:500; transition: color 0.3s;">Références</button>
+            <button id="btn-home-nav" class="nav-link">Accueil</button>
+            <button id="btn-references" class="nav-link">Références</button>
+            <button id="btn-mute" class="nav-link nav-icon-btn" aria-label="Couper les effets sonores">🔊</button>
         </div>
     </header>
 
@@ -29,7 +30,7 @@
         <!-- ÉCRAN 1 : ACCUEIL -->
         <section id="welcome-screen" class="screen active">
             <div class="welcome-hero">
-                <span class="hero-badge">🔬 Référentiel Clinique WAIS-V & Modèle CHC</span>
+                <span class="hero-badge">🔬 Structure inspirée de la WAIS-5 &amp; du modèle CHC</span>
                 <h1>Test & Calcul du <span class="text-gradient">Quotient Intellectuel</span></h1>
                 <p class="hero-subtitle">
                     Évaluez votre fonctionnement intellectuel sur 5 domaines clés de votre cerveau. Obtenez un vrai score de QI (moyenne à 100) et découvrez comment vous vous situez par rapport au reste de la population !
@@ -76,19 +77,21 @@
                         <div class="mode-card selected" data-mode="express">
                             <div class="mode-header">
                                 <span class="mode-title">⚡ Test Express</span>
-                                <span class="mode-time">~10 min</span>
+                                <span class="mode-time">~12 min</span>
                             </div>
-                            <p style="font-size:0.88rem; color:var(--text-secondary);">8 questions rapides pour tester la base de votre logique, mémoire et repérage dans l'espace.</p>
+                            <p class="mode-desc">25 questions (5 par domaine) pour situer rapidement votre logique, votre mémoire et votre repérage dans l'espace.</p>
                         </div>
                         <div class="mode-card" data-mode="full">
                             <div class="mode-header">
                                 <span class="mode-title">🔬 Batterie Complète</span>
                                 <span class="mode-time">~25 min</span>
                             </div>
-                            <p style="font-size:0.88rem; color:var(--text-secondary);">15 questions complètes pour un bilan profond de votre cerveau avec un grand rapport détaillé.</p>
+                            <p class="mode-desc">50 questions (10 par domaine). Deux fois plus d'items, donc un profil nettement plus fiable et plus contrasté.</p>
                         </div>
                     </div>
                 </div>
+
+                <p id="speech-availability-note" class="speech-note">Détection de la voix de synthèse…</p>
 
                 <div class="action-bar">
                     <button id="btn-launch-quiz" class="btn-primary">Lancer le Test</button>
@@ -115,12 +118,27 @@
             <div class="quiz-card">
                 <h2 id="quiz-question-title" class="question-title">Chargement de l'item...</h2>
 
+                <div id="quiz-oral-indicator" class="oral-indicator">
+                    <!-- État de l'énoncé oral -->
+                </div>
+
                 <div id="quiz-visual-container" class="visual-container">
-                    <!-- Rendu dynamique vectoriel SVG ou matrice -->
+                    <!-- Rendu dynamique vectoriel SVG, matrice ou séquence -->
                 </div>
 
                 <div id="quiz-options-grid" class="options-grid">
                     <!-- Boutons de réponse générés en JS -->
+                </div>
+
+                <div id="quiz-text-answer" class="text-answer-box">
+                    <label for="quiz-text-input" class="text-answer-label">Votre réponse :</label>
+                    <div class="text-answer-row">
+                        <input type="text" id="quiz-text-input" class="input-styled text-answer-input"
+                               autocomplete="off" autocapitalize="characters" spellcheck="false"
+                               placeholder="Saisissez votre réponse">
+                        <button id="btn-submit-text" class="btn-primary">Valider</button>
+                    </div>
+                    <span id="quiz-text-hint" class="text-answer-hint"></span>
                 </div>
             </div>
         </section>
@@ -130,7 +148,7 @@
             <div class="card-box computing-box">
                 <div class="loader-spinner"></div>
                 <h2>Calcul Psychométrique en Cours</h2>
-                <p style="color:var(--text-secondary);">Conversion des scores bruts en z-scores normés WAIS-V 2026...</p>
+                <p style="color:var(--text-secondary);">Conversion des scores bruts en z-scores et estimation de la fidélité...</p>
             </div>
         </section>
 
@@ -154,8 +172,12 @@
                     </div>
                     <div class="stat-item">
                         <span class="stat-label">Étalonnage</span>
-                        <span class="stat-value">WAIS-V 2026</span>
+                        <span class="stat-value">Normes synthétiques 2026</span>
                     </div>
+                </div>
+
+                <div id="res-fsiq-formula" class="fsiq-formula">
+                    <!-- Détail du calcul, injecté en JS -->
                 </div>
             </div>
 
@@ -215,18 +237,29 @@
                 <div class="references-content" style="margin-top: 1.5rem; line-height: 1.6;">
                     <h3>Modèles Psychométriques</h3>
                     <ul style="margin-bottom: 1.5rem; padding-left: 1.5rem;">
-                        <li style="margin-bottom: 0.5rem;"><strong>Modèle CHC (Cattell-Horn-Carroll)</strong> : Modèle hiérarchique de l'intelligence humaine qui sert de base à la plupart des tests de QI modernes. <a href="https://fr.wikipedia.org/wiki/Mod%C3%A8le_de_Cattell-Horn-Carroll" target="_blank" rel="noopener noreferrer" style="color: var(--primary);">En savoir plus (Wikipedia)</a></li>
-                        <li style="margin-bottom: 0.5rem;"><strong>WAIS-IV / WAIS-V</strong> (Wechsler Adult Intelligence Scale) : Le test standard d'évaluation clinique du QI. Les domaines évalués s'en inspirent directement. <a href="https://fr.wikipedia.org/wiki/Wechsler_Adult_Intelligence_Scale" target="_blank" rel="noopener noreferrer" style="color: var(--primary);">En savoir plus (Wikipedia)</a></li>
-                        <li style="margin-bottom: 0.5rem;"><strong>Matrices de Raven</strong> : Outil classique de mesure de l'intelligence fluide (Gf) non verbale. <a href="https://fr.wikipedia.org/wiki/Matrices_progressives_de_Raven" target="_blank" rel="noopener noreferrer" style="color: var(--primary);">En savoir plus (Wikipedia)</a></li>
-                        <li style="margin-bottom: 0.5rem;"><strong>Facteur g (Intelligence Générale)</strong> : Découvert par Charles Spearman, le facteur sous-jacent mesuré par l'ensemble des sous-tests. <a href="https://fr.wikipedia.org/wiki/Facteur_g" target="_blank" rel="noopener noreferrer" style="color: var(--primary);">En savoir plus (Wikipedia)</a></li>
+                        <li style="margin-bottom: 0.5rem;"><strong>Modèle CHC (Cattell-Horn-Carroll)</strong> : Modèle hiérarchique de l'intelligence humaine qui sert de base à la plupart des tests de QI modernes. <a href="https://fr.wikipedia.org/wiki/Mod%C3%A8le_de_Cattell-Horn-Carroll" target="_blank" rel="noopener noreferrer" class="ref-link">En savoir plus (Wikipedia)</a></li>
+                        <li style="margin-bottom: 0.5rem;"><strong>WAIS-5</strong> (Wechsler Adult Intelligence Scale, 5<sup>e</sup> édition, Pearson 2024) : batterie clinique de référence pour l'adulte. Sa structure à cinq indices (ICV, IVS, IRF, IMT, IVT) est celle reprise ici — l'ancien indice de raisonnement perceptif y a été scindé en visuo-spatial et fluide. <a href="https://www.pearsonassessments.com/en-us/Store/Professional-Assessments/Cognition-&amp;-Neuro/Wechsler-Adult-Intelligence-Scale-|-Fifth-Edition/p/P100071002" target="_blank" rel="noopener noreferrer" class="ref-link">Fiche éditeur</a></li>
+                        <li style="margin-bottom: 0.5rem;"><strong>WAIS-IV en France</strong> : à ce jour, la version étalonnée et commercialisée en France reste la WAIS-IV (2011). La WAIS-5 y est annoncée pour 2026. <a href="https://www.pearsonclinical.fr/wais-iv" target="_blank" rel="noopener noreferrer" class="ref-link">Pearson Clinical France</a></li>
+                        <li style="margin-bottom: 0.5rem;"><strong>Matrices de Raven</strong> : Outil classique de mesure de l'intelligence fluide (Gf) non verbale. <a href="https://fr.wikipedia.org/wiki/Matrices_progressives_de_Raven" target="_blank" rel="noopener noreferrer" class="ref-link">En savoir plus (Wikipedia)</a></li>
+                        <li style="margin-bottom: 0.5rem;"><strong>Facteur g (Intelligence Générale)</strong> : Découvert par Charles Spearman, le facteur sous-jacent mesuré par l'ensemble des sous-tests. <a href="https://fr.wikipedia.org/wiki/Facteur_g" target="_blank" rel="noopener noreferrer" class="ref-link">En savoir plus (Wikipedia)</a></li>
                     </ul>
                     
                     <h3>Articles et Publications</h3>
                     <ul style="margin-bottom: 1.5rem; padding-left: 1.5rem;">
-                        <li style="margin-bottom: 0.5rem;"><em>"CHC theory and the human cognitive abilities project"</em> - Kevin S. McGrew (2009). <a href="https://doi.org/10.1016/j.intell.2008.08.004" target="_blank" rel="noopener noreferrer" style="color: var(--primary);">Consulter la publication (DOI)</a></li>
-                        <li style="margin-bottom: 0.5rem;"><em>"L'Effet Flynn"</em> : L'évolution des scores de QI au fil des générations, justifiant le réétalonnage régulier des normes. <a href="https://fr.wikipedia.org/wiki/Effet_Flynn" target="_blank" rel="noopener noreferrer" style="color: var(--primary);">En savoir plus (Wikipedia)</a></li>
+                        <li style="margin-bottom: 0.5rem;"><em>"CHC theory and the human cognitive abilities project"</em> - Kevin S. McGrew (2009). <a href="https://doi.org/10.1016/j.intell.2008.08.004" target="_blank" rel="noopener noreferrer" class="ref-link">Consulter la publication (DOI)</a></li>
+                        <li style="margin-bottom: 0.5rem;"><em>"L'Effet Flynn"</em> : L'évolution des scores de QI au fil des générations, justifiant le réétalonnage régulier des normes. <a href="https://fr.wikipedia.org/wiki/Effet_Flynn" target="_blank" rel="noopener noreferrer" class="ref-link">En savoir plus (Wikipedia)</a></li>
+                        <li style="margin-bottom: 0.5rem;"><em>"Wait, Where's the Flynn Effect on the WAIS-5?"</em> — Journal of Intelligence (2024). L'étalonnage WAIS-5 se situe <strong>1,9 point en dessous</strong> de la WAIS-IV, soit environ 1,2 point par décennie contre 3 historiquement : l'effet Flynn ralentit nettement, voire s'inverse. Autrement dit, des normes récentes ne rendent pas les scores plus généreux. <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11595985/" target="_blank" rel="noopener noreferrer" class="ref-link">Consulter l'article</a></li>
+                        <li style="margin-bottom: 0.5rem;"><em>"Cognitive Aging Revisited: A Cross-Sectional Analysis of the WAIS-5"</em> (2025). Sert de base à l'étalonnage par âge de cette application : la vitesse de traitement décline dès 20-24 ans et le plus fortement, le raisonnement fluide et le visuo-spatial dès 45 ans, la mémoire de travail résiste mieux, et la compréhension verbale culmine entre 45 et 54 ans avant de ne décliner qu'après 80 ans. <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12295516/" target="_blank" rel="noopener noreferrer" class="ref-link">Consulter l'article</a></li>
                     </ul>
-                    
+
+                    <h3>Limites de cette application</h3>
+                    <ul style="margin-bottom: 1.5rem; padding-left: 1.5rem;">
+                        <li style="margin-bottom: 0.5rem;"><strong>Normes synthétiques.</strong> Les scores ne reposent sur aucun échantillon représentatif : le taux de réussite « moyen » est posé a priori, domaine par domaine. Un vrai étalonnage suppose des milliers de passations stratifiées par âge, sexe et niveau d'études.</li>
+                        <li style="margin-bottom: 0.5rem;"><strong>Domaines regroupés.</strong> Le versant verbal et le versant quantitatif sont ici fusionnés en un seul indice, alors que la WAIS-5 les sépare (ICV d'un côté, raisonnement quantitatif rattaché au fluide de l'autre).</li>
+                        <li style="margin-bottom: 0.5rem;"><strong>Conditions de passation non contrôlées.</strong> Ni la fatigue, ni les interruptions, ni l'aide extérieure, ni les passations répétées (effet d'apprentissage) ne peuvent être vérifiées ici — ce sont précisément les variables qu'un psychologue contrôle en face à face.</li>
+                        <li style="margin-bottom: 0.5rem;"><strong>Aucune valeur diagnostique.</strong> Ce test ne permet ni de confirmer ni d'écarter un haut potentiel intellectuel, un trouble des apprentissages ou une déficience intellectuelle.</li>
+                    </ul>
+
                 </div>
             </div>
         </section>
@@ -237,7 +270,7 @@
     <footer class="app-footer">
         <div class="footer-content">
             <p class="disclaimer">
-                <strong>⚠️ Mention importante :</strong> Ce projet est fourni à des fins éducatives et démonstratives. Bien qu'il s'inspire de la rigueur des tests psychométriques actuels (WAIS-V, Matrices de Raven), il ne se substitue en aucun cas à un véritable bilan neuropsychologique encadré par un psychologue diplômé.
+                <strong>⚠️ Mention importante :</strong> Ce projet est fourni à des fins éducatives et démonstratives. Bien qu'il s'inspire de la rigueur des tests psychométriques actuels (WAIS-5, Matrices de Raven), il ne se substitue en aucun cas à un véritable bilan neuropsychologique encadré par un psychologue diplômé.
             </p>
             <p class="credits">
                 Créé par <strong>reddwarf03</strong> et ses amis agents. 🤖✨
@@ -251,6 +284,7 @@
     <!-- Scripts Javascript -->
     <script src="js/psychometrics.js"></script>
     <script src="js/audio.js"></script>
+    <script src="js/speech.js"></script>
     <script src="js/questions.js"></script>
     <script src="js/app.js"></script>
 </body>
